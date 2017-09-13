@@ -1,1 +1,76 @@
+.jumbotron {
+    margin: 50px 0 50px 0;
+}
 
+body {
+    background: #50545a;
+    background-image: url(../images/backround.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    /*color: #fff;*/
+    font-weight: 400;
+    font-size: 1em;
+    font-family: 'Raleway', Arial, sans-serif;
+    overflow: hidden;
+    overflow-y: scroll;
+    min-height: 590px;
+}
+
+.ui-autocomplete {
+    /*background: #4a4a4a!important;*/
+    border-radius: 0px;
+    font-family: 'Raleway', Arial, sans-serif!important;
+}
+
+.error {
+    color: red;
+    font-size: large;
+}
+
+
+}
+.stylish-input-group .input-group-addon {
+    background: white !important;
+}
+.stylish-input-group .form-control {
+    border-right: 0;
+    box-shadow: 0 0 0;
+    border-color: #ccc;
+}
+.stylish-input-group button {
+    border: 0;
+    background: transparent;
+}
+.poster {
+    margin: 10px!important;
+    border-style: solid!important;
+    float: left!important;
+    /*height: 200px;*/
+
+    width: 220px;
+}
+
+/*.float-left {
+    margin: 10px;
+    text-align: center;
+
+    float: left!important;
+}*/
+.movie-info {
+    max-width: 300px;
+
+}
+.form-group,
+{
+    text-align: center;
+}
+
+.clear{
+	clear: both!important;
+	margin: 2px!important;
+	max-width: 290px!important;
+}
+.btn-primary {
+	    margin: 0 0 0 75px;
+
+}
