@@ -8,21 +8,18 @@ function getNewMovies(movie) {
         url: queryURL,
         method: "GET"
     }).done(function(response) {
-        // for (var i = 0; i < 8; i++) {
-        //     var movieId = response.results[i].id;
-        //     $("#posters").append("<div><p>" + response.results[i].title + "</p><p>" + response.results[i].release_date + "</p><p><img src= https://image.tmdb.org/t/p/w185/" + response.results[i].poster_path + "></p><p>" + response.results[i].overview + "</p></div>");
-        //     makeButton(response.results[i].title, response.results[i].id);
-        // }
 
-        for (var i = 0; i < 4; i++) {
+        for (var i = 0; i < 1; i++) {
             var movieInfoDiv = $("<div>");
             movieInfoDiv.addClass("movie-info");
-            movieInfoDiv.addClass("pull-left")
-
             var pTitle = $("<p>");
             var pReleased = $("<p>");
             var pPlot = $("<p>");
+            var pNotice = $("<p>");
+            pNotice.addClass("informational");
+            pNotice.text("click on the poster for more stuff!");
             pPlot.addClass("clear");
+            pPlot.addClass("movie-plot");
             var movieTitle = response.results[i].title;
             var movieRelDate = getYear(response.results[i].release_date);
             var movieId = response.results[i].id;
@@ -30,19 +27,24 @@ function getNewMovies(movie) {
             var moviePlot = response.results[i].overview;
 
             pTitle.text("Title: " + movieTitle);
+            pTitle.addClass("movie-title");
+            pReleased.addClass("movie-released");
             pReleased.text("Released: " + movieRelDate);
-            pPlot.text("Plot: " + moviePlot);
+            pPlot.text(moviePlot);
 
             var movieImg = $("<img>");
             movieImg.attr("src", "https://image.tmdb.org/t/p/w185/" + moviePoster);
             movieImg.addClass("img-responsive")
             movieImg.addClass("poster");
+            movieImg.attr("data-name", movieId);
+            movieImg.attr("title", movieTitle);
 
             movieInfoDiv.append(pTitle);
             movieInfoDiv.append(pReleased);
-            movieInfoDiv.append(makeButton(movieTitle, movieId));
             movieInfoDiv.append(movieImg);
-            movieInfoDiv.append(pPlot)
+            movieInfoDiv.append(pNotice);
+            movieInfoDiv.append(pPlot);
+
             $('#posters').append(movieInfoDiv);
 
         }
@@ -70,12 +72,12 @@ function displayGoodies() {
     clearGoodies();
     $("#review-panel").show();
     $("#trailer-panel").show();
+    $("#recomendation-panel").show();
     var title = $(this).attr("title");
     var dataName = $(this).attr("data-name");
     getTrailerId(dataName);
-
+    getRecomendationId(dataName);
     getNytData(title);
-
     //scroll to top of trailer div
     $('html, body').animate({
         scrollTop: ($('#trailer-panel').offset().top)
@@ -86,28 +88,70 @@ function displayGoodies() {
 
 function getTrailerId(x) {
     var queryURL = "https://api.themoviedb.org/3/movie/" + x + "/videos?api_key=d53b802d30d38d0bf73c24dabc4a5c8d&language=en-US"
-    // console.log(queryURL);
+    console.log(queryURL);
     $.ajax({
         url: queryURL,
         method: "GET"
     }).done(function(response) {
-        var youtubeId = response.results[0].key;
-        var test = response.results[0].type;
-        // console.log(youtubeId);
-        console.log(test);
-        getYtData(youtubeId);
+
+        var trailerArr = [];
+        var featuretteArr = [];
+
+        for (var i = 0; i < response.results.length; i++) {
+            if (response.results[i].type === "Trailer") {
+                var youtubeId = response.results[i].key;
+                trailerArr.push(response.results[i].key);
+                // getYtData(youtubeId);
+
+            } else {
+                var youtubeId = response.results[i].key;
+                featuretteArr.push(response.results[i].key);
+                // getYtData(youtubeId);
+            }
+
+
+        }
+        // due to the way themoviedb handles trailers, this is needed to get the most relevant result if trailer type is 'Trailer' we prefer to show that, otherwise well show 'featurette'
+        if (trailerArr.length > 0) {
+            getYtData(trailerArr[0]);
+
+        } else {
+            getYtData(featuretteArr[0]);
+
+        }
+
+    });
+}
+
+function getRecomendationId(x) {
+    var recommendationUrl = "https://api.themoviedb.org/3/movie/" + x + "/recommendations?api_key=d53b802d30d38d0bf73c24dabc4a5c8d&language=en-US&page=1";
+    $.ajax({
+        url: recommendationUrl,
+        method: 'GET',
+    }).done(function(recommendation) {
+        for (var i = 0; i < 12; i++) {
+            var userRecommendation = recommendation.results[i].title;
+
+            console.log(recommendation.results[i].title);
+            $("#recomendation").append("<tr><td>" + recommendation.results[i].title + "</td></tr>"
+
+            );
+
+        }
     });
 }
 
 
 function getNytData(title) {
     var reviewUrl = "https://api.nytimes.com/svc/movies/v2/reviews/search.json?api-key=03e9ed8edb0944dbb5c1b7e983811b8b&query=" + title;
+    console.log(reviewUrl);
     $.ajax({
         url: reviewUrl,
         method: 'GET',
     }).done(function(result) {
         for (var i = 0; i < result.results.length; i++) {
-            $("#reviews > tbody").append("<tr><td>" + result.results[i].link.suggested_link_text + "</td><td>" + "<a href='" + result.results[i].link.url + "'>" + result.results[i].link.url + "</a>" + "</td></tr>");
+            $("#reviews > tbody").prepend("<tr><td>" + result.results[i].link.suggested_link_text + "</td><td>" + "<a href='" + result.results[i].link.url + "' target='_blank' >" + result.results[i].link.url + "</a>" + "</td></tr>");
+           
         }
     })
 }
@@ -121,9 +165,7 @@ function getYtData(title) {
     }).done(function(response) {
         var results = response.items;
         for (var i = 0; i < results.length; i++) {
-            // displayVideo(results[i], i);
-            //blake mods
-             displayVideo(results[0]);
+            displayVideo(results[0]);
         }
     });
 }
@@ -134,12 +176,15 @@ function clearResults() {
     $("#trailers").empty();
     $("#reviews-results").empty();
     $("#movie-input").empty();
+    $("#recomendation-results").empty();
 }
 
 
 function clearGoodies() {
     $("#trailers").empty();
     $("#reviews-results").empty();
+    $("#recomendation-results").empty();
+
 }
 
 
@@ -147,25 +192,23 @@ function hideDivs() {
     $("#poster-panel").hide();
     $("#review-panel").hide();
     $("#trailer-panel").hide();
+    $("#recomendation-panel").hide();
 }
+
 function resetDivs() {
-    // $("#poster-panel").hide();
     $("#review-panel").hide();
     $("#trailer-panel").hide();
+    $("#recomendation-panel").hide();
 }
 
 
 function displayVideo(result, i) {
     var vid = document.createElement('div');
+    vid.className = "embed-responsive-item"; //resonsive embed
     vidId = 'vid' + i;
     vid.id = vidId;
     $("#trailers").append(vid);
     var player = new YT.Player(vidId, {
-        // height: '360',
-        // width: '480',
-          // changed resolution to 480 by 720 for larger video player to compensate for there only being 1 trailer
-        height: '480',
-        width: '720',
         videoId: result.id.videoId,
         events: {
             'onReady': onPlayerReady
@@ -179,7 +222,6 @@ function displayVideo(result, i) {
             $("#trailers").empty(e.target.a);
         } else {
             var myId = e.target.a.id;
-            // console.log('Video ' + myId + ' ready to play.');
         }
     }
 }
@@ -192,6 +234,7 @@ $("#movie-form").submit(function(event) {
     if (input != '' && movieSearch == null) {
         event.preventDefault();
         clearResults();
+        resetDivs(); //rehide
         var movie = $("#movie-input").val().trim();
         getNewMovies(movie);
         getNytData(movie);
@@ -199,7 +242,7 @@ $("#movie-form").submit(function(event) {
         $('.ui-menu').hide(); // hide autocomplete options
         scrollPoster();
         $("#poster-panel").show();
-        resetDivs(); //rehide
+
         movieSearch = null;
         // if were are using the autcomplete recommendation
     } else if (movieSearch != null) {
@@ -220,7 +263,8 @@ $("#movie-form").submit(function(event) {
 
 });
 
-$(document).on("click", ".move-button", displayGoodies);
+
+$(document).on("click", ".poster", displayGoodies);
 
 
 // validate
@@ -246,9 +290,8 @@ $(function() {
 
     }
     var selectItem = function(event, ui) {
-        event.preventDefault() 
+        event.preventDefault()
         $("#movie-input").val(ui.item.value);
-        // console.log(ui.item.value);
         window.movieSearch = ui.item.value;
         return false;
     }
@@ -263,7 +306,7 @@ $(function() {
 
         },
         autoFocus: true,
-        minLength: 2, 
+        minLength: 2,
         change: function() {
             $("#movie-input").val("").css("display", 2);
         }
@@ -272,18 +315,15 @@ $(function() {
 
 //momentjs to get year of relesae
 
-function getYear(date){
- var dateFormat = "YYYY-MM-DD";
- var convertedDate = moment(date, dateFormat);
- year = convertedDate.format("YYYY");
- return year;
+function getYear(date) {
+    var dateFormat = "YYYY-MM-DD";
+    var convertedDate = moment(date, dateFormat);
+    year = convertedDate.format("YYYY");
+    return year;
 }
 
-function scrollPoster(){
-       $('html, body').animate({
+function scrollPoster() {
+    $('html, body').animate({
         scrollTop: ($('#poster-panel').offset().top)
     }, 500);
 }
-
-hide
-
